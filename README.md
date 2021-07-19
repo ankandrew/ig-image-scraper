@@ -31,7 +31,7 @@ Run:
 `pip install -r requirements.txt`
 
 Then download the chrome driver from [here](https://chromedriver.chromium.org/downloads) according to your Chrome version.
-When creater `Scraper` object make sure to pass the correct path to the driver.
+When creating `Scraper` object make sure to pass the correct path to the driver.
 
 ### Disclaimer
 
