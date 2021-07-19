@@ -9,7 +9,8 @@ from .logger import Logger
 
 
 class Scraper:
-    URL = f'https://www.instagram.com/explore/tags'
+    LOGIN_URL = 'https://www.instagram.com/accounts/login'
+    URL = 'https://www.instagram.com/explore/tags'
     SLEEP_LOGIN_ENTER = 5
     WAIT_PAGE_LOAD = 4
     HUMAN_DELAY = 2
@@ -27,6 +28,11 @@ class Scraper:
             self.max_samples = float('inf')
         else:
             self.max_samples = max_samples
+        self.__show_warning()
+
+    def __show_warning(self):
+        if self.login is None:
+            print('Posts may be limited when not logging into an user!')
 
     def get_img_link(self, driver) -> set:
         most_recent = driver.find_elements_by_xpath("//h2[contains(text(), 'Most recent')]/following-sibling::div")
@@ -48,32 +54,21 @@ class Scraper:
         self.is_logged = True
 
     def scan(self, tag: str) -> None:
+        # First login to account (if provided)
+        if self.login:
+            self.driver.get(self.LOGIN_URL)
+            sleep(self.WAIT_PAGE_LOAD)
+            self.__login()
+            sleep(self.HUMAN_DELAY)
         self.driver.get(f'{self.URL}/{tag}/')
         # Wait for page to load
         sleep(self.WAIT_PAGE_LOAD)
-        # If ig blocked our request it seems to be requiring logged user
-        if self.driver.title == 'Login • Instagram' or 'login' in self.driver.current_url.lower():
-            if self.login:
-                self.__login()
-            else:
-                raise ValueError('IG blocked non-user from searching tags, so login must be provided!')
-        # Re-visit tags sites (we may be re-directed to home page)
-        if 'instagram' == self.driver.title.lower():
-            self.driver.get(f'{self.URL}/{tag}/')
         img_set = self.get_img_link(self.driver)
         # Get scroll height
         last_height = self.driver.execute_script("return document.body.scrollHeight")
-        counter = 0
         while True:
-            if counter == 2:
-                if self.login and not self.is_logged:
-                    sleep(5)
-                    self.__login()
-                elif not self.is_logged:
-                    print('Posts may be limited when not logging into an user!')
-                    self.driver.execute_script("""document.querySelector("body").style.overflow="visible";""")
             # Scroll down to bottom
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            self.driver.execute_script(f"window.scrollTo(0, {last_height});")
             # Wait to load page
             sleep(round(random.uniform(3, 4.3), 2))
             # Save new imgs
@@ -85,7 +80,8 @@ class Scraper:
             # Calculate new scroll height and compare with last scroll height
             new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
-                print(f'End of page (no more images). Scrapped {len(img_set)} urls')
-                return
+                # Avoid "infinite loading" by going a little bit up, then down
+                sleep(self.HUMAN_DELAY)
+                self.driver.execute_script(f"window.scrollTo(0, {last_height * 0.95});")
+                self.driver.execute_script(f"window.scrollTo(0, {last_height});")
             last_height = new_height
-            counter += 1
