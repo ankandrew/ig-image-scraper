@@ -1,4 +1,4 @@
-### Instagram Image Scraper
+## Instagram Image Scraper
 
 Scrap instagram images given a hashtag
 
@@ -32,3 +32,7 @@ Run:
 
 Then download the chrome driver from [here](https://chromedriver.chromium.org/downloads) according to your Chrome version.
 When creater `Scraper` object make sure to pass the correct path to the driver.
+
+### Disclaimer
+
+This tool is for educational purposes only.
