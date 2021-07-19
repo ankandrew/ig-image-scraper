@@ -1,6 +1,6 @@
 ### Instagram Image Scraper
 
-Scrap instagram images given an hashtag
+Scrap instagram images given a hashtag
 
 ### Usage
 
